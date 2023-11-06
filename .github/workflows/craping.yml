@@ -2,7 +2,7 @@ name: html scraper
 
 on:
   schedule:
-    - cron: "0 */12 * * *" # every two hours, every day
+    - cron: "0 */1 * * *" # every one hour
   push:
     branches:
         - main

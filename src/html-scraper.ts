@@ -11,7 +11,7 @@ const isActionWorkflow = process.env.NODE_ENV === "gh-actions";
 console.debug(`isActionWorkflow=${isActionWorkflow}`);
 
 const SCRAPER_STATES_FILE = `html-scraper-states-${year}.json`;
-const MAX_PAGE_PER_RUN = 1;
+const MAX_PAGE_PER_RUN = 10;
 const pageUrl =
   "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php" +
   `?as_q=&as_epq=&as_oq=&as_eq=&ids=&yearno=${year === "all" ? "" : year}` +
@@ -62,7 +62,7 @@ function abs(number: number) {
   return number < 0 ? number * -1 : number;
 }
 
-async function saveHTML(content: string) {
+async function saveHTML(content: string, header?: string) {
   const hashValue = abs(hashString(content));
 
   const htmlFilename = `${hashValue}.html`;
@@ -76,7 +76,7 @@ async function saveHTML(content: string) {
   const htmlPath = `${subDir}/${htmlFilename}`;
 
   if (!existsSync(htmlPath)) {
-    writeFileSync(htmlPath, content);
+    writeFileSync(htmlPath, header ? header + content : content);
     console.debug(`Saved HTML to ${htmlPath}`);
   } else {
     console.debug(`HTML already exists at ${htmlPath}`);
@@ -140,8 +140,12 @@ const scraper = async () => {
           await waitForPageContent(newPage);
 
           const htmlContent = await meetingDetailHtml(newPage);
-
-          const data = await saveHTML(htmlContent);
+          const header = `<!--
+  source: ${meetingUrl}
+  date: ${new Date().toISOString()}
+-->
+`;
+          const data = await saveHTML(htmlContent, header);
 
           scraperState.pushMeetingReportUrl({
             filePath: data.htmlPath,
