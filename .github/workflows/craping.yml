@@ -21,15 +21,14 @@ jobs:
           node-version: 16
           cache: "npm"
           cache-dependency-path: ./package-lock.json
-      - run: npm install
-      - run: npm run scrape:html all
+      - name: install dependencies
+        run: npm install
+      - name: scrape html
+        run: npm run scrape:html all
         env:
           NODE_ENV: gh-actions
       - name: parse html
-        run: |
-          if git diff --quiet; then
-            npm run parse:html
-          fi
+        run: npm run parse:html
       - name: commit file
         run: |
           if git diff --quiet; then
