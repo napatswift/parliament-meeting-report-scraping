@@ -1,0 +1,47 @@
+name: html scraper
+
+on:
+  schedule:
+    - cron: "0 */12 * * *" # every two hours, every day
+  push:
+    branches:
+        - main
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: "npm"
+          cache-dependency-path: ./package-lock.json
+      - run: npm install
+      - run: npm run scrape:html all
+        env:
+          NODE_ENV: gh-actions
+      - name: parse html
+        run: |
+          if if git diff --quiet; then
+            npm run parse:html
+          fi
+      - name: commit file
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          else
+            git config --local user.email "parlrep@users.noreply.github.com"
+            git config --local user.name "parlrep"
+            git add ./html-scraper-states-all.json
+            git add ./meeting-sessions.json
+            git add ./downloaded-html/**/*.html
+            git commit -m "Update at $(date)"
+            git push
+          fi
+
