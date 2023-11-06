@@ -31,16 +31,10 @@ jobs:
         run: npm run parse:html
       - name: commit file
         run: |
-          if git diff --quiet; then
-            echo "No changes to commit"
-            exit 0
-          else
-            git config --local user.email "parlrep@users.noreply.github.com"
-            git config --local user.name "parlrep"
-            git add ./html-scraper-states-all.json
-            git add ./meeting-sessions.json
-            git add ./downloaded-html/**/*.html
-            git commit -m "Update at $(date)"
-            git push
-          fi
-
+          git config --local user.email "parlrep@users.noreply.github.com"
+          git config --local user.name "parlrep"
+          git add ./html-scraper-states-all.json
+          git add ./meeting-sessions.json
+          git add ./downloaded-html/**/*.html
+          git commit -m "Update at $(date)"
+          git push
