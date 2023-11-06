@@ -37,7 +37,19 @@ export class ScraperState<T> {
   }
 
   pushMeetingReportUrl(url: T) {
-    this.allMeetingReportUrls.push(url);
+    if (
+      this.allMeetingReportUrls.findIndex((u) => {
+        // If all keys are the same, then it's the same object
+        for (const key in u) {
+          if (u[key] !== url[key]) {
+            return false;
+          }
+        }
+        return true;
+      }) === -1
+    ) {
+      this.allMeetingReportUrls.push(url);
+    }
   }
 
   pushVisitedUrl(url: string) {
