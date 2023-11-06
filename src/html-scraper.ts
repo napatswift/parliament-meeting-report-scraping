@@ -180,7 +180,7 @@ const scraper = async () => {
       scraperState.saveFile();
     } else {
       // Reset lastClickFunction
-      scraperState.updateLastClickFunction("");
+      scraperState.clearStates();
       scraperState.saveFile();
       break;
     }

@@ -60,6 +60,12 @@ export class ScraperState<T> {
     this.hasErrorUrls = this.hasErrorUrls.filter((u) => u !== url);
   }
 
+  clearStates() {
+    this.visitedUrls = [];
+    this.hasErrorUrls = [];
+    this.lastClickFunction = "";
+  }
+
   get states() {
     return {
       lastClickFunction: this.lastClickFunction,
