@@ -27,7 +27,7 @@ jobs:
           NODE_ENV: gh-actions
       - name: parse html
         run: |
-          if if git diff --quiet; then
+          if git diff --quiet; then
             npm run parse:html
           fi
       - name: commit file
