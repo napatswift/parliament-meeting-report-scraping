@@ -12,12 +12,6 @@ console.debug(`isActionWorkflow=${isActionWorkflow}`);
 
 const SCRAPER_STATES_FILE = `html-scraper-states-${year}.json`;
 const MAX_PAGE_PER_RUN = 10;
-const pageUrl =
-  "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php" +
-  `?as_q=&as_epq=&as_oq=&as_eq=&ids=&yearno=${year === "all" ? "" : year}` +
-  "&year=&num=&session_id=&as_filetype=&" +
-  "as_type=%C3%D2%C2%A7%D2%B9%A1%D2%C3%BB%C3%D0%AA%D8%C1&Submit=%A4%E9%B9%CB%D2.." +
-  "&filename=index&type=6&formtype=advancedS";
 
 const htmlDirectory = "downloaded-html";
 
@@ -90,6 +84,13 @@ const scraper = async () => {
   const page = (await browser.pages()).at(0);
 
   const scraperState = new ScraperState<MeetingHtml>(SCRAPER_STATES_FILE);
+
+  const pageUrl =
+    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php" +
+    `?as_q=&as_epq=&as_oq=&as_eq=&ids=&yearno=${year === "all" ? "" : year}` +
+    "&year=&num=&session_id=&as_filetype=&" +
+    `as_type=${scraperState.fileType}&Submit=%A4%E9%B9%CB%D2..` +
+    "&filename=index&type=6&formtype=advancedS";
 
   await page.goto(pageUrl);
 

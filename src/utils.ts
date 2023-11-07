@@ -27,6 +27,15 @@ export class ScraperState<T> {
   visitedUrls: string[] = [];
   hasErrorUrls: string[] = [];
   lastClickFunction: string = "";
+  fileTypeIndex: number = 0;
+  fileTypes = [
+    "%C3%D2%C2%A7%D2%B9%A1%D2%C3%BB%C3%D0%AA%D8%C1", // รายงานการประชุม
+    "%BA%D1%B9%B7%D6%A1%A1%D2%C3%BB%C3%D0%AA%D8%C1", // บันทึกการประชุม
+    "%CA%C3%D8%BB%E0%CB%B5%D8%A1%D2%C3%B3%EC", // สรุปเหตุการณ์
+    "%BA%D1%B9%B7%D6%A1%A1%D2%C3%CD%CD%A1%E0%CA%D5%C2%A7%C5%A7%A4%D0%E1%B9%B9", // บันทึกการออกเสียงลงคะแนน
+    "%BB%C3%D0%C1%C7%C5%A4%D3%C7%D4%B9%D4%A8%A9%D1%C2", // ประมวลคำวินิจฉัย
+    "%CA%C3%D8%BB%A1%D2%C3%BB%C3%D0%AA%D8%C1", // สรุปการประชุม
+  ];
 
   constructor(public stateFileName: string) {
     this.readStates();
@@ -76,15 +85,21 @@ export class ScraperState<T> {
     this.visitedUrls = [];
     this.hasErrorUrls = [];
     this.lastClickFunction = "";
+    this.fileTypeIndex = (this.fileTypeIndex + 1) % this.fileTypes.length;
   }
 
   get states() {
     return {
+      fileType: this.fileTypeIndex,
       lastClickFunction: this.lastClickFunction,
       allMeetingReportUrls: this.allMeetingReportUrls,
       visitedUrls: this.visitedUrls,
       hasErrorUrls: this.hasErrorUrls,
     };
+  }
+
+  get fileType() {
+    return this.fileTypes[this.fileTypeIndex] || "";
   }
 
   readStates() {
@@ -95,6 +110,7 @@ export class ScraperState<T> {
       this.allMeetingReportUrls = states.allMeetingReportUrls || [];
       this.visitedUrls = states.visitedUrls || [];
       this.hasErrorUrls = states.hasErrorUrls || [];
+      this.fileTypeIndex = states.fileType || 0;
     }
   }
 
