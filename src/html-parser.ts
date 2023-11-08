@@ -153,52 +153,55 @@ function parse(meeting: MeetingHtml) {
   };
 }
 
-console.debug("No. of meeting report urls:", state.allMeetingReportUrls.length);
-console.debug("parsing meeting report urls ...");
+function uniqueFilter(
+  meeting: MeetingHtml,
+  index: number,
+  self: MeetingHtml[]
+) {
+  // Keep only the first occurrence of the url
+  return self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) === index;
+}
 
-writeFileSync(
-  "meeting-sessions.json",
-  JSON.stringify(
-    state.allMeetingReportUrls
-      // .slice(0, 10)
-      .map((report: MeetingHtml) => {
-        try {
-          return {
-            ...report,
-            ...parse(report),
-          };
-        } catch (error) {
-          // console.error(report.filePath, error.message);
-          return {
-            ...report,
-            error: error.message,
-          };
-        }
-      })
-      .sort((a, b) => {
-        if (
-          "error" in a &&
-          a.error !== undefined &&
-          "error" in b &&
-          b.error !== undefined
-        )
-          return 0;
+console.table({
+  total: state.allMeetingReportUrls.length,
+  unique: state.allMeetingReportUrls.filter(uniqueFilter).length,
+});
 
-        if ("error" in a && a.error !== undefined) return 1;
-        if ("error" in b && b.error !== undefined) return -1;
-
-        if ("date" in a && a.date !== undefined && !("date" in b)) return -1;
-        if (!("date" in a) && "date" in b && b.date !== undefined) return 1;
-        if ("date" in a && "date" in b) {
-          if (a.date === undefined && b.date !== undefined) return 1;
-          if (a.date !== undefined && b.date === undefined) return -1;
-          if (a.date !== undefined && b.date !== undefined)
-            return a.date.localeCompare(b.date);
-          else return 0;
-        }
-        return 0;
-      }),
-    null,
-    2
+console.debug("duplicate urls:");
+console.debug(
+  state.allMeetingReportUrls.filter(
+    (meeting, index, self) =>
+      self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) !== index
   )
 );
+
+console.debug("parsing meeting report urls ...");
+
+const parsedData = state.allMeetingReportUrls
+  .filter(uniqueFilter)
+  // .slice(0, 10)
+  .map((report: MeetingHtml) => ({
+    ...report,
+    ...parse(report),
+  }))
+  .sort((a, b) => {
+    if (a.date === undefined && b.date !== undefined) return 1;
+    if (a.date !== undefined && b.date === undefined) return -1;
+    if (a.date !== undefined && b.date !== undefined)
+      return a.date.localeCompare(b.date);
+    else return 0;
+  });
+
+console.debug("Stats:");
+console.table(
+  parsedData.reduce((acc, cur) => {
+    if (acc[cur.essembleName] === undefined) {
+      acc[cur.essembleName] = 0;
+    } else {
+      acc[cur.essembleName]++;
+    }
+    return acc;
+  }, {})
+);
+
+writeFileSync("meeting-sessions.json", JSON.stringify(parsedData, null, 2));

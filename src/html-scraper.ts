@@ -193,6 +193,17 @@ const scraper = async () => {
 
   scraperState.saveFile();
   await browser.close();
+
+  // Stats
+  const stats = {
+    total: scraperState.allMeetingReportUrls.length,
+    unique: scraperState.allMeetingReportUrls.filter(
+      (meeting, index, self) =>
+        self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) === index
+    ).length,
+  };
+
+  console.table(stats);
 };
 
 scraper();
