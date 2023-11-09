@@ -1,7 +1,17 @@
 import { JSDOM } from "jsdom";
 import { ScraperState, convertThaiNumberToArabic } from "./utils";
 import { MeetingHtml } from "./types";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+
+interface AssemblySession {
+  date: string;
+  essembleName: any;
+  sessionInfo: string[];
+  sourceUrl: string;
+  documents: any[];
+  filePath: string;
+  sessionId: string;
+}
 
 function readHtml(filePath: string) {
   const html = readFileSync(filePath, "utf-8");
@@ -48,6 +58,7 @@ function generateParliamentMeetingId<
   );
 
   for (const session of sessions) {
+    if (session.sessionId !== "") continue;
     const meetingSet = session.sessionInfo[1].replace(/^ชุดที่\s+/, "");
     const meetingYear = session.sessionInfo[2].replace(/^ปีที่\s+/, "");
     const meetingSubYear = session.sessionInfo[3];
@@ -60,7 +71,7 @@ function generateParliamentMeetingId<
   }
 }
 
-function generateNationalEssembleId<
+function generateNationalAssemblyId<
   T extends { sessionInfo: string[]; sessionId: string }
 >(sessions: T[]): undefined {
   if (!sessions.every((session) => session.sessionInfo.length === 4)) {
@@ -82,6 +93,7 @@ function generateNationalEssembleId<
   );
 
   for (const session of sessions) {
+    if (session.sessionId !== "") continue;
     const meetingYear = session.sessionInfo[1].replace(/^ปี\s+(\d+).*/, "$1");
     const meetingSubYear = session.sessionInfo[2];
     const meetingNumber = session.sessionInfo[3]
@@ -235,21 +247,29 @@ function parse(meeting: MeetingHtml) {
   };
 }
 
-function uniqueFilter(
-  meeting: MeetingHtml,
-  index: number,
-  self: MeetingHtml[]
-) {
-  // Keep only the first occurrence of the url
-  return self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) === index;
+function getRootId(id: string) {
+  return id.replace(/#\d+$/, "");
 }
 
 function main() {
+  const parsedDataFilePath = "meeting-sessions.json";
+
+  const prevParsedData = new Array<AssemblySession>();
+  if (existsSync(parsedDataFilePath)) {
+    JSON.parse(readFileSync(parsedDataFilePath, "utf-8")).forEach(
+      (report: AssemblySession) => {
+        prevParsedData.push(report);
+      }
+    );
+  }
   const state = new ScraperState<MeetingHtml>("html-scraper-states-all.json");
 
   console.table({
     total: state.allMeetingReportUrls.length,
-    unique: state.allMeetingReportUrls.filter(uniqueFilter).length,
+    unique: state.allMeetingReportUrls.filter(
+      (meeting, index, self) =>
+        self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) === index
+    ).length,
   });
 
   console.debug("duplicate urls:");
@@ -263,14 +283,27 @@ function main() {
   console.debug("parsing meeting report urls ...");
 
   const parsedData = state.allMeetingReportUrls
-    .filter(uniqueFilter)
+    .filter((meeting, index, self) => {
+      return (
+        self.findLastIndex((m) => m.sourceUrl === meeting.sourceUrl) === index
+      );
+    })
     // .slice(0, 500)
-    .map((report: MeetingHtml) => ({
-      sessionId: "",
-      ...report,
-      ...parse(report),
-    }))
+    .map((report: MeetingHtml): AssemblySession => {
+      const existingData = prevParsedData.find(
+        (existingReport) =>
+          existingReport.sourceUrl === report.sourceUrl &&
+          existingReport.filePath === report.filePath
+      );
+      if (existingData) return existingData;
+      return {
+        sessionId: "",
+        ...report,
+        ...parse(report),
+      };
+    })
     .map((report) => {
+      if (report.sessionId !== "") return report;
       if (
         report.essembleName === "สภาร่างรัฐธรรมนูญ" ||
         report.essembleName === "สภาปฏิรูปแห่งชาติ" ||
@@ -279,9 +312,7 @@ function main() {
       ) {
         return specialAssemblyId(report);
       }
-      return {
-        ...report,
-      };
+      return report;
     });
 
   // Parliament meeting id
@@ -290,7 +321,7 @@ function main() {
   );
 
   // National essemble (รัฐสภา) id
-  generateNationalEssembleId(
+  generateNationalAssemblyId(
     parsedData.filter((report) => report.essembleName === "รัฐสภา")
   );
 
@@ -321,6 +352,39 @@ function main() {
     "Meeting without Id:",
     parsedData.filter((report) => report.sessionId === "").length
   );
+
+  // Fix duplicated id
+  parsedData
+    .filter(
+      (report, index, self) =>
+        self.findIndex(
+          (m) =>
+            getRootId(m.sessionId) === getRootId(report.sessionId) &&
+            m.essembleName === report.essembleName
+        ) !== index
+    )
+    .map((report) => getRootId(report.sessionId))
+    .forEach((id) => {
+      const duplicatedData = parsedData.filter(
+        (report) => getRootId(report.sessionId) === id
+      );
+
+      const maxSubId = Math.max(
+        ...duplicatedData.map((report) => {
+          if (report.sessionId.match(/#\d+$/))
+            return parseInt(report.sessionId.replace(/^.*#/, ""));
+          return 0;
+        })
+      );
+
+      duplicatedData
+        .filter((report) => report.sessionId.match(/#\d+$/) === null)
+        .forEach((report, index) => {
+          report.sessionId = `${getRootId(report.sessionId)}#${
+            index + maxSubId + 1
+          }`;
+        });
+    });
 
   writeFileSync("meeting-sessions.json", JSON.stringify(sortedData, null, 2));
 }
