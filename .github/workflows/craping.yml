@@ -2,10 +2,7 @@ name: html scraper
 
 on:
   schedule:
-    - cron: "0 */1 * * *" # every one hour
-  push:
-    branches:
-        - main
+    - cron: "0 */3 * * *" # every 3 hours
 
 jobs:
   scrape:
@@ -27,8 +24,6 @@ jobs:
         run: npm run scrape:html all
         env:
           NODE_ENV: gh-actions
-      # - name: parse html
-      #   run: npm run parse:html
       - name: commit file
         run: |
           git config --local user.email "parlrep@users.noreply.github.com"

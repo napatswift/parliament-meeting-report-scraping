@@ -3,12 +3,94 @@ import { ScraperState, convertThaiNumberToArabic } from "./utils";
 import { MeetingHtml } from "./types";
 import { readFileSync, writeFileSync } from "fs";
 
-const state = new ScraperState<MeetingHtml>("html-scraper-states-all.json");
-
 function readHtml(filePath: string) {
   const html = readFileSync(filePath, "utf-8");
   const dom = new JSDOM(html);
   return dom.window.document;
+}
+
+function specialAssemblyId<
+  T extends { sessionInfo: string[]; sessionId: string }
+>(session: T): T {
+  if (session.sessionInfo.length !== 3) {
+    throw new Error("expect 3 sessionInfo");
+  }
+  const year = session.sessionInfo[1].replace(/^ปี\s+(\d+)/, "$1");
+  const number = session.sessionInfo[2]
+    .replace(/^ครั้งที่\s+(\d+(\/\d+)?).*$/, "$1")
+    .replace(/\//, "@");
+  return {
+    ...session,
+    sessionId: `${year}.${number}`,
+  };
+}
+
+function generateParliamentMeetingId<
+  T extends { sessionInfo: string[]; sessionId: string }
+>(sessions: T[]): undefined {
+  if (!sessions.every((session) => session.sessionInfo.length === 5)) {
+    throw new Error("expect 5 sessionInfo");
+  }
+
+  const subYearGroupedByYear = sessions.reduce(
+    (acc: { [key: string]: Array<string> }, session) => {
+      const meetingSet = session.sessionInfo[1].replace(/^ชุดที่\s+/, "");
+      const meetingYear = session.sessionInfo[2].replace(/^ปีที่\s+/, "");
+      const meetingSubYear = session.sessionInfo[3];
+      const year = `${meetingSet}.${meetingYear}`;
+      if (acc[year] === undefined) {
+        acc[year] = new Array<string>();
+      }
+      if (!acc[year].includes(meetingSubYear)) acc[year].push(meetingSubYear);
+      return acc;
+    },
+    {}
+  );
+
+  for (const session of sessions) {
+    const meetingSet = session.sessionInfo[1].replace(/^ชุดที่\s+/, "");
+    const meetingYear = session.sessionInfo[2].replace(/^ปีที่\s+/, "");
+    const meetingSubYear = session.sessionInfo[3];
+    const meetingNumber = session.sessionInfo[4]
+      .replace(/^ครั้งที่\s+(\d+(\/\d+)?).*$/, "$1")
+      .replace(/\//, "@");
+    const year = meetingSet + "." + meetingYear;
+    const subYearIdx = subYearGroupedByYear[year].indexOf(meetingSubYear);
+    session.sessionId = `${meetingSet}.${meetingYear}.${subYearIdx}.${meetingNumber}`;
+  }
+}
+
+function generateNationalEssembleId<
+  T extends { sessionInfo: string[]; sessionId: string }
+>(sessions: T[]): undefined {
+  if (!sessions.every((session) => session.sessionInfo.length === 4)) {
+    throw new Error("expect 4 sessionInfo");
+  }
+
+  const subYearGroupedByYear = sessions.reduce(
+    (acc: { [key: string]: Array<string> }, session) => {
+      const meetingYear = session.sessionInfo[1].replace(/^ปี\s+(\d+).*/, "$1");
+      const meetingSubYear = session.sessionInfo[2];
+      if (acc[meetingYear] === undefined) {
+        acc[meetingYear] = new Array<string>();
+      }
+      if (!acc[meetingYear].includes(meetingSubYear))
+        acc[meetingYear].push(meetingSubYear);
+      return acc;
+    },
+    {}
+  );
+
+  for (const session of sessions) {
+    const meetingYear = session.sessionInfo[1].replace(/^ปี\s+(\d+).*/, "$1");
+    const meetingSubYear = session.sessionInfo[2];
+    const meetingNumber = session.sessionInfo[3]
+      .replace(/^ครั้งที่\s+(\d+(\/\d+)?).*$/, "$1")
+      .replace(/\//, "-");
+    const subYearIdx =
+      subYearGroupedByYear[meetingYear].indexOf(meetingSubYear);
+    session.sessionId = `${meetingYear}.${subYearIdx}.${meetingNumber}`;
+  }
 }
 
 const MONTH_TH_TO_NUMBER = {
@@ -162,29 +244,57 @@ function uniqueFilter(
   return self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) === index;
 }
 
-console.table({
-  total: state.allMeetingReportUrls.length,
-  unique: state.allMeetingReportUrls.filter(uniqueFilter).length,
-});
+function main() {
+  const state = new ScraperState<MeetingHtml>("html-scraper-states-all.json");
 
-console.debug("duplicate urls:");
-console.debug(
-  state.allMeetingReportUrls.filter(
-    (meeting, index, self) =>
-      self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) !== index
-  )
-);
+  console.table({
+    total: state.allMeetingReportUrls.length,
+    unique: state.allMeetingReportUrls.filter(uniqueFilter).length,
+  });
 
-console.debug("parsing meeting report urls ...");
+  console.debug("duplicate urls:");
+  console.debug(
+    state.allMeetingReportUrls.filter(
+      (meeting, index, self) =>
+        self.findIndex((m) => m.sourceUrl === meeting.sourceUrl) !== index
+    )
+  );
 
-const parsedData = state.allMeetingReportUrls
-  .filter(uniqueFilter)
-  // .slice(0, 10)
-  .map((report: MeetingHtml) => ({
-    ...report,
-    ...parse(report),
-  }))
-  .sort((a, b) => {
+  console.debug("parsing meeting report urls ...");
+
+  const parsedData = state.allMeetingReportUrls
+    .filter(uniqueFilter)
+    // .slice(0, 500)
+    .map((report: MeetingHtml) => ({
+      sessionId: "",
+      ...report,
+      ...parse(report),
+    }))
+    .map((report) => {
+      if (
+        report.essembleName === "สภาร่างรัฐธรรมนูญ" ||
+        report.essembleName === "สภาปฏิรูปแห่งชาติ" ||
+        report.essembleName === "สภานิติบัญญัติแห่งชาติ" ||
+        report.essembleName === "สภาขับเคลื่อนการปฏิรูปประเทศ"
+      ) {
+        return specialAssemblyId(report);
+      }
+      return {
+        ...report,
+      };
+    });
+
+  // Parliament meeting id
+  generateParliamentMeetingId(
+    parsedData.filter((report) => report.essembleName === "สภาผู้แทนราษฎร")
+  );
+
+  // National essemble (รัฐสภา) id
+  generateNationalEssembleId(
+    parsedData.filter((report) => report.essembleName === "รัฐสภา")
+  );
+
+  const sortedData = parsedData.sort((a, b) => {
     if (a.date === undefined && b.date !== undefined) return 1;
     if (a.date !== undefined && b.date === undefined) return -1;
     if (a.date !== undefined && b.date !== undefined)
@@ -192,16 +302,27 @@ const parsedData = state.allMeetingReportUrls
     else return 0;
   });
 
-console.debug("Stats:");
-console.table(
-  parsedData.reduce((acc, cur) => {
-    if (acc[cur.essembleName] === undefined) {
-      acc[cur.essembleName] = 0;
-    } else {
-      acc[cur.essembleName]++;
-    }
-    return acc;
-  }, {})
-);
+  console.debug("Stats:");
+  console.table(
+    parsedData.reduce(
+      (acc, cur) => {
+        if (acc[cur.essembleName] === undefined) {
+          acc[cur.essembleName] = 0;
+        } else {
+          acc[cur.essembleName]++;
+        }
+        acc.total++;
+        return acc;
+      },
+      { total: 0 }
+    )
+  );
+  console.log(
+    "Meeting without Id:",
+    parsedData.filter((report) => report.sessionId === "").length
+  );
 
-writeFileSync("meeting-sessions.json", JSON.stringify(parsedData, null, 2));
+  writeFileSync("meeting-sessions.json", JSON.stringify(sortedData, null, 2));
+}
+
+main();
