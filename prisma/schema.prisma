@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MeetingSession {
+  essemblyType                       String
+  id                                 String
+  sourceUrl                          String                               @unique
+  startAt                            DateTime
+  endAt                              DateTime?
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime
+  MeetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
+  MeetingDocument                    MeetingDocument[]
+
+  @@unique([essemblyType, id])
+}
+
+model MeetingDocument {
+  meetingSessionEssemblyType String
+  meetingSessionId           String
+  id                         Int
+  documentName               String
+  sourceUrl                  String
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime
+  MeetingSession             MeetingSession @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
+  TextDocument               TextDocument[]
+
+  @@unique([meetingSessionEssemblyType, meetingSessionId, id])
+  @@index([meetingSessionEssemblyType, meetingSessionId])
+}
+
+model MeetingCategoriesOnMeetingSessions {
+  meetingSessionEssemblyType String
+  meetingSessionId           String
+  meetingCategoryName        String
+  MeetingCategory            MeetingCategory @relation(fields: [meetingCategoryName], references: [categoryName])
+  MeetingSession             MeetingSession  @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
+
+  @@unique([meetingSessionEssemblyType, meetingSessionId, meetingCategoryName])
+}
+
+model MeetingCategory {
+  categoryName                       String                               @id
+  order                              Int
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime
+  MeetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
+}
+
+model Editor {
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+  username  String      @id
+  SlatePage SlatePage[]
+}
+
+model SlatePage {
+  id        Int      @id @default(autoincrement())
+  pageId    Int
+  nodes     Json
+  editorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Editor    Editor   @relation(fields: [editorId], references: [username])
+  TextPage  TextPage @relation(fields: [pageId], references: [id])
+}
+
+model TextDocument {
+  id                                        String           @id
+  meetingDocumentId                         Int?
+  meetingDocumentMeetingSessionEssemblyType String?
+  meetingDocumentMeetingSessionId           String?
+  MeetingDocument                           MeetingDocument? @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
+  TextPage                                  TextPage[]
+}
+
+model TextLine {
+  id              Int           @id @default(autoincrement())
+  text            String
+  lineIndex       Int
+  x0              Float
+  y0              Float
+  x1              Float
+  y1              Float
+  textParagraphId Int
+  TextParagraph   TextParagraph @relation(fields: [textParagraphId], references: [id])
+}
+
+model TextPage {
+  id             Int             @id @default(autoincrement())
+  pageIndex      Int
+  pageNumber     String
+  sizeWidth      Float
+  sizeHeight     Float
+  isImage        Boolean
+  isSkipped      Boolean
+  textDocumentId String
+  SlatePage      SlatePage[]
+  TextDocument   TextDocument    @relation(fields: [textDocumentId], references: [id])
+  TextParagraph  TextParagraph[]
+}
+
+model TextParagraph {
+  id             Int        @id @default(autoincrement())
+  paragraphIndex Int
+  firstLineX0    Float
+  lineHeight     Float
+  textPageId     Int
+  TextLine       TextLine[]
+  TextPage       TextPage   @relation(fields: [textPageId], references: [id])
+}

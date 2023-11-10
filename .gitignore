@@ -2,3 +2,4 @@ node_modules/
 downloaded-pdf/
 xx-*
 google-cloud-sdk
+.env
