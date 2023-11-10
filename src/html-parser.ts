@@ -1,5 +1,9 @@
 import { JSDOM } from "jsdom";
-import { ScraperState, convertThaiNumberToArabic } from "./utils";
+import {
+  ScraperState,
+  convertThaiNumberToArabic,
+  findLastIndex,
+} from "./utils";
 import { MeetingHtml } from "./types";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 
@@ -37,7 +41,7 @@ function specialAssemblyId<
 
 function generateParliamentMeetingId<
   T extends { sessionInfo: string[]; sessionId: string }
->(sessions: T[]): undefined {
+>(sessions: T[]): void {
   if (!sessions.every((session) => session.sessionInfo.length === 5)) {
     throw new Error("expect 5 sessionInfo");
   }
@@ -73,7 +77,7 @@ function generateParliamentMeetingId<
 
 function generateNationalAssemblyId<
   T extends { sessionInfo: string[]; sessionId: string }
->(sessions: T[]): undefined {
+>(sessions: T[]): void {
   if (!sessions.every((session) => session.sessionInfo.length === 4)) {
     throw new Error("expect 4 sessionInfo");
   }
@@ -162,14 +166,17 @@ function extractDates(text: string) {
 function extractDataUrls(table: HTMLTableElement, meeting: MeetingHtml) {
   const fileUrls = [];
   let fileStarted = false;
-  for (const row of table.rows) {
+  const tableRows = Array.from(table.rows);
+  for (const row of tableRows) {
     if (!fileStarted && row.textContent.trim() === "ข้อมูลการประชุม") {
       fileStarted = true;
     }
     if (fileStarted) {
       Array.from(row.getElementsByTagName("a"))
-        .filter((a) => a.href && !a.href.startsWith("about:blank"))
-        .map((a) => {
+        .filter(
+          (a: HTMLAnchorElement) => a.href && !a.href.startsWith("about:blank")
+        )
+        .map((a: HTMLAnchorElement) => {
           return {
             text: a.textContent,
             href: a.href,
@@ -262,6 +269,7 @@ function main() {
       }
     );
   }
+
   const state = new ScraperState<MeetingHtml>("html-scraper-states-all.json");
 
   console.table({
@@ -285,7 +293,7 @@ function main() {
   const parsedData = state.allMeetingReportUrls
     .filter((meeting, index, self) => {
       return (
-        self.findLastIndex((m) => m.sourceUrl === meeting.sourceUrl) === index
+        findLastIndex(self, (m) => m.sourceUrl === meeting.sourceUrl) === index
       );
     })
     // .slice(0, 500)
@@ -385,6 +393,13 @@ function main() {
           }`;
         });
     });
+
+  console.log(
+    "Meeting with invalid id: ",
+    prevParsedData.filter(
+      (report) => report.sessionId.match(/^\d+(\.[\d@#]+)+$/) === null
+    )
+  );
 
   writeFileSync("meeting-sessions.json", JSON.stringify(sortedData, null, 2));
 }
