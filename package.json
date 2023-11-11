@@ -2,7 +2,8 @@
   "name": "thai-parliament-scraper",
   "scripts": {
     "scrape:html": "ts-node src/html-scraper.ts",
-    "parse:html": "ts-node src/html-parser.ts"
+    "parse:html": "ts-node src/html-parser.ts",
+    "upload": "ts-node src/upload-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.5.2",

@@ -73,12 +73,14 @@ model SlatePage {
 }
 
 model TextDocument {
-  id                                        String           @id
-  meetingDocumentId                         Int?
-  meetingDocumentMeetingSessionEssemblyType String?
-  meetingDocumentMeetingSessionId           String?
-  MeetingDocument                           MeetingDocument? @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
+  id                                        String          @id
+  meetingDocumentId                         Int
+  meetingDocumentMeetingSessionEssemblyType String
+  meetingDocumentMeetingSessionId           String
+  MeetingDocument                           MeetingDocument @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
   TextPage                                  TextPage[]
+  createdAt                                 DateTime        @default(now())
+  updatedAt                                 DateTime
 }
 
 model TextLine {
