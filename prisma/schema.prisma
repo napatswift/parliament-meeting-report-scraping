@@ -15,8 +15,8 @@ model MeetingSession {
   endAt                              DateTime?
   createdAt                          DateTime                             @default(now())
   updatedAt                          DateTime
-  MeetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
-  MeetingDocument                    MeetingDocument[]
+  meetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
+  meetingDocuments                   MeetingDocument[]
 
   @@unique([essemblyType, id])
 }
@@ -29,8 +29,8 @@ model MeetingDocument {
   sourceUrl                  String
   createdAt                  DateTime       @default(now())
   updatedAt                  DateTime
-  MeetingSession             MeetingSession @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
-  TextDocument               TextDocument[]
+  meetingSession             MeetingSession @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
+  textDocuments              TextDocument[]
 
   @@unique([meetingSessionEssemblyType, meetingSessionId, id])
   @@index([meetingSessionEssemblyType, meetingSessionId])
@@ -40,8 +40,8 @@ model MeetingCategoriesOnMeetingSessions {
   meetingSessionEssemblyType String
   meetingSessionId           String
   meetingCategoryName        String
-  MeetingCategory            MeetingCategory @relation(fields: [meetingCategoryName], references: [categoryName])
-  MeetingSession             MeetingSession  @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
+  meetingCategory            MeetingCategory @relation(fields: [meetingCategoryName], references: [categoryName], onDelete: Cascade, onUpdate: Cascade)
+  meetingSession             MeetingSession  @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([meetingSessionEssemblyType, meetingSessionId, meetingCategoryName])
 }
@@ -51,14 +51,14 @@ model MeetingCategory {
   order                              Int
   createdAt                          DateTime                             @default(now())
   updatedAt                          DateTime
-  MeetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
+  meetingCategoriesOnMeetingSessions MeetingCategoriesOnMeetingSessions[]
 }
 
 model Editor {
-  createdAt DateTime    @default(now())
-  updatedAt DateTime
-  username  String      @id
-  SlatePage SlatePage[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime
+  username   String      @id
+  slatePages SlatePage[]
 }
 
 model SlatePage {
@@ -68,17 +68,17 @@ model SlatePage {
   editorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime
-  Editor    Editor   @relation(fields: [editorId], references: [username])
-  TextPage  TextPage @relation(fields: [pageId], references: [id])
+  editor    Editor   @relation(fields: [editorId], references: [username])
+  textPage  TextPage @relation(fields: [pageId], references: [id])
 }
 
 model TextDocument {
-  id                                        String          @id
+  id                                        Int             @id @default(autoincrement())
   meetingDocumentId                         Int
   meetingDocumentMeetingSessionEssemblyType String
   meetingDocumentMeetingSessionId           String
-  MeetingDocument                           MeetingDocument @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
-  TextPage                                  TextPage[]
+  meetingDocument                           MeetingDocument @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
+  textPages                                 TextPage[]
   createdAt                                 DateTime        @default(now())
   updatedAt                                 DateTime
 }
@@ -92,7 +92,7 @@ model TextLine {
   x1              Float
   y1              Float
   textParagraphId Int
-  TextParagraph   TextParagraph @relation(fields: [textParagraphId], references: [id])
+  textParagraph   TextParagraph @relation(fields: [textParagraphId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model TextPage {
@@ -103,10 +103,10 @@ model TextPage {
   sizeHeight     Float
   isImage        Boolean
   isSkipped      Boolean
-  textDocumentId String
-  SlatePage      SlatePage[]
-  TextDocument   TextDocument    @relation(fields: [textDocumentId], references: [id])
-  TextParagraph  TextParagraph[]
+  textDocumentId Int
+  slatePages     SlatePage[]
+  textDocument   TextDocument    @relation(fields: [textDocumentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textParagraphs TextParagraph[]
 }
 
 model TextParagraph {
@@ -115,6 +115,6 @@ model TextParagraph {
   firstLineX0    Float
   lineHeight     Float
   textPageId     Int
-  TextLine       TextLine[]
-  TextPage       TextPage   @relation(fields: [textPageId], references: [id])
+  textLines      TextLine[]
+  textPage       TextPage   @relation(fields: [textPageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

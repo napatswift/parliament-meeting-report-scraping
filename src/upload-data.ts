@@ -70,7 +70,7 @@ async function main() {
       id: sessionId,
       sourceUrl: sourceUrl,
       startAt: isoDate,
-      MeetingCategoriesOnMeetingSessions: {
+      meetingCategoriesOnMeetingSessions: {
         connectOrCreate: sessionInfo
           .map((info) => info.replace(/\s+/g, " ").trim())
           .map(
@@ -88,7 +88,7 @@ async function main() {
                     },
                 },
                 create: {
-                  MeetingCategory: {
+                  meetingCategory: {
                     connectOrCreate: {
                       where: {
                         categoryName: category,
@@ -106,7 +106,7 @@ async function main() {
           ),
       },
       updatedAt: new Date(),
-      MeetingDocument: {
+      meetingDocuments: {
         connectOrCreate: meetingSession.documents.map(
           (
             document,
