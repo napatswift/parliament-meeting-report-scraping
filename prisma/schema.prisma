@@ -30,7 +30,7 @@ model MeetingDocument {
   createdAt                  DateTime       @default(now())
   updatedAt                  DateTime
   meetingSession             MeetingSession @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
-  textDocuments              TextDocument[]
+  textDocuments              TextDocument?
 
   @@unique([meetingSessionEssemblyType, meetingSessionId, id])
   @@index([meetingSessionEssemblyType, meetingSessionId])
@@ -40,8 +40,8 @@ model MeetingCategoriesOnMeetingSessions {
   meetingSessionEssemblyType String
   meetingSessionId           String
   meetingCategoryName        String
-  meetingCategory            MeetingCategory @relation(fields: [meetingCategoryName], references: [categoryName], onDelete: Cascade, onUpdate: Cascade)
-  meetingSession             MeetingSession  @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType], onDelete: Cascade, onUpdate: Cascade)
+  meetingCategory            MeetingCategory @relation(fields: [meetingCategoryName], references: [categoryName])
+  meetingSession             MeetingSession  @relation(fields: [meetingSessionId, meetingSessionEssemblyType], references: [id, essemblyType])
 
   @@unique([meetingSessionEssemblyType, meetingSessionId, meetingCategoryName])
 }
@@ -62,25 +62,31 @@ model Editor {
 }
 
 model SlatePage {
-  id        Int      @id @default(autoincrement())
-  pageId    Int
-  nodes     Json
-  editorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  editor    Editor   @relation(fields: [editorId], references: [username])
-  textPage  TextPage @relation(fields: [pageId], references: [id])
+  id             Int              @id @default(autoincrement())
+  nodes          Json
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  editorId       String
+  pageId         Int
+  editor         Editor           @relation(fields: [editorId], references: [username])
+  textPage       TextPage         @relation(fields: [pageId], references: [id])
+  TranscriptLine TranscriptLine[]
 }
 
 model TextDocument {
-  id                                        Int             @id @default(autoincrement())
+  id                                        Int                     @id @default(autoincrement())
   meetingDocumentId                         Int
   meetingDocumentMeetingSessionEssemblyType String
   meetingDocumentMeetingSessionId           String
-  meetingDocument                           MeetingDocument @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
-  textPages                                 TextPage[]
-  createdAt                                 DateTime        @default(now())
+  createdAt                                 DateTime                @default(now())
   updatedAt                                 DateTime
+  textDocumentType                          TextDocumentType        @default(OTHER)
+  isDocumentShowing                         Boolean                 @default(false)
+  meetingDocument                           MeetingDocument         @relation(fields: [meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId], references: [meetingSessionEssemblyType, meetingSessionId, id])
+  TextDocumentAttribute                     TextDocumentAttribute[]
+  textPages                                 TextPage[]
+
+  @@unique([meetingDocumentMeetingSessionEssemblyType, meetingDocumentMeetingSessionId, meetingDocumentId])
 }
 
 model TextLine {
@@ -92,7 +98,7 @@ model TextLine {
   x1              Float
   y1              Float
   textParagraphId Int
-  textParagraph   TextParagraph @relation(fields: [textParagraphId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textParagraph   TextParagraph @relation(fields: [textParagraphId], references: [id])
 }
 
 model TextPage {
@@ -105,7 +111,7 @@ model TextPage {
   isSkipped      Boolean
   textDocumentId Int
   slatePages     SlatePage[]
-  textDocument   TextDocument    @relation(fields: [textDocumentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textDocument   TextDocument    @relation(fields: [textDocumentId], references: [id])
   textParagraphs TextParagraph[]
 }
 
@@ -116,5 +122,74 @@ model TextParagraph {
   lineHeight     Float
   textPageId     Int
   textLines      TextLine[]
-  textPage       TextPage   @relation(fields: [textPageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  textPage       TextPage   @relation(fields: [textPageId], references: [id])
+}
+
+model TextDocumentAttribute {
+  id             Int           @id @default(autoincrement())
+  documentId     Int
+  key            String
+  value          Json
+  type           AttributeType
+  textDocumentId Int
+  TextDocument   TextDocument  @relation(fields: [textDocumentId], references: [id])
+}
+
+model Speaker {
+  id                      Int                       @id @default(autoincrement())
+  speakerName             String                    @unique
+  SpeakersOnSpeakerTitles SpeakersOnSpeakerTitles[]
+}
+
+model SpeakerTitle {
+  id                      Int                       @id @default(autoincrement())
+  speakerTitleName        String                    @unique
+  SpeakersOnSpeakerTitles SpeakersOnSpeakerTitles[]
+}
+
+model SpeakersOnSpeakerTitles {
+  speakerId      Int
+  speakerTitleId Int
+  Speaker        Speaker          @relation(fields: [speakerId], references: [id])
+  SpeakerTitle   SpeakerTitle     @relation(fields: [speakerTitleId], references: [id])
+  TranscriptLine TranscriptLine[]
+
+  @@unique([speakerId, speakerTitleId])
+  @@index([speakerId])
+  @@index([speakerTitleId])
+}
+
+model TranscriptLine {
+  id                      Int                      @id @default(autoincrement())
+  lineOrder               Int
+  lineText                String
+  lineType                TranscriptLineType
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime
+  slatePageId             Int
+  speakerId               Int?
+  speakerTitleId          Int?
+  SlatePage               SlatePage                @relation(fields: [slatePageId], references: [id], onDelete: Cascade)
+  SpeakersOnSpeakerTitles SpeakersOnSpeakerTitles? @relation(fields: [speakerId, speakerTitleId], references: [speakerId, speakerTitleId])
+
+  @@unique([slatePageId, lineOrder])
+  @@index([slatePageId])
+}
+
+enum AttributeType {
+  STRING
+  ORDERED_LIST
+  UNORDERED_LIST
+}
+
+enum TextDocumentType {
+  TRANSCRIPT
+  SUMMARY
+  VOTE_RESULT
+  OTHER
+}
+
+enum TranscriptLineType {
+  TRANSCRIPT
+  ACTION
 }
