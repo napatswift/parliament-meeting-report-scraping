@@ -11,7 +11,7 @@ const isActionWorkflow = process.env.NODE_ENV === "gh-actions";
 console.debug(`isActionWorkflow=${isActionWorkflow}`);
 
 const SCRAPER_STATES_FILE = `html-scraper-states-${year}.json`;
-const MAX_PAGE_PER_RUN = 10;
+const MAX_PAGE_PER_RUN = 18;
 
 const htmlDirectory = "downloaded-html";
 
