@@ -3,18 +3,19 @@
   "scripts": {
     "scrape:html": "ts-node src/html-scraper.ts",
     "parse:html": "ts-node src/html-parser.ts",
-    "upload": "ts-node src/upload-data.ts"
+    "upload": "ts-node src/upload-data.ts",
+    "download": "ts-node src/download-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.6.0",
     "jsdom": "^22.1.0",
-    "puppeteer": "^20.9.0"
+    "puppeteer": "^24.4.0"
   },
   "devDependencies": {
     "@types/filesystem": "^0.0.32",
     "@types/jquery": "^3.5.16",
     "@types/jsdom": "^21.1.4",
-    "@types/node": "^24.1.1",
+    "@types/node": "^22.13.9",
     "@types/node-fetch": "^2.6.4",
     "prisma": "^5.6.0",
     "ts-node": "^10.9.1",
