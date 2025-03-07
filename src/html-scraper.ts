@@ -80,7 +80,10 @@ async function saveHTML(content: string, header?: string) {
 }
 
 const scraper = async () => {
-  const browser = await puppeteer.launch({ slowMo: 10 });
+  const browser = await puppeteer.launch({
+    slowMo: 10,
+    args: ["--no-sandbox"],
+  });
   const page = (await browser.pages()).at(0);
 
   const scraperState = new ScraperState<MeetingHtml>(SCRAPER_STATES_FILE);
