@@ -29,6 +29,8 @@ jobs:
           NODE_ENV: gh-actions
       - name: parse html
         run: npm run parse:html
+      - name: generate static html
+        run: npm run generate:html
       - name: commit file
         run: |
           git config --local user.email "parlrep@users.noreply.github.com"
@@ -36,5 +38,6 @@ jobs:
           git add ./html-scraper-states-all.json
           git add ./meeting-sessions.json
           git add ./downloaded-html/**/*.html
+          git add ./docs/index.html
           git commit -m "Update at $(date)"
           git push

@@ -4,7 +4,8 @@
     "scrape:html": "ts-node src/html-scraper.ts",
     "parse:html": "ts-node src/html-parser.ts",
     "upload": "ts-node src/upload-data.ts",
-    "download": "ts-node src/download-data.ts"
+    "download": "ts-node src/download-data.ts",
+    "generate:html": "ts-node src/generate-html.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.6.0",
