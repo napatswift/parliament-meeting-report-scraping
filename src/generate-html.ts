@@ -4,7 +4,7 @@ interface JSONMeetingSession {
   sessionId: string;
   filePath: string;
   sourceUrl: string;
-  date: string;
+  date?: string;
   essembleName: string;
   sessionInfo: string[];
   documents: JSONMeetingDocument[];
@@ -95,7 +95,13 @@ function generateHtml(sessions: JSONMeetingSession[]): string {
 
   // Sort sessions within each group by date (descending - newest first)
   Object.values(groupedSessions).forEach((group) => {
-    group.sort((a, b) => b.date.localeCompare(a.date));
+    // Sessions without a parsed date go last
+    group.sort((a, b) => {
+      if (!a.date && b.date) return 1;
+      if (a.date && !b.date) return -1;
+      if (a.date && b.date) return b.date.localeCompare(a.date);
+      return 0;
+    });
   });
 
   const assemblyNames = Object.keys(groupedSessions);
