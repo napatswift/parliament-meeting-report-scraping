@@ -23,6 +23,10 @@ jobs:
           cache-dependency-path: ./package-lock.json
       - name: install dependencies
         run: npm install
+      - name: scrape latest html
+        run: npm run scrape:latest
+        env:
+          NODE_ENV: gh-actions
       - name: scrape html
         run: npm run scrape:html all
         env:

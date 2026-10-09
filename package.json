@@ -2,6 +2,7 @@
   "name": "thai-parliament-scraper",
   "scripts": {
     "scrape:html": "ts-node src/html-scraper.ts",
+    "scrape:latest": "ts-node src/html-scraper.ts all --latest",
     "parse:html": "ts-node src/html-parser.ts",
     "upload": "ts-node src/upload-data.ts",
     "download": "ts-node src/download-data.ts",

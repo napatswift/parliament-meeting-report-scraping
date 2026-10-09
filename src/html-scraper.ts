@@ -7,11 +7,16 @@ const year: string =
   process.argv[2] && process.argv[2] !== "all" ? process.argv[2] : "all";
 console.debug(`year: "${year}"`);
 
+// Scrape new meetings from the newest end of every file type, without touching the crawl position
+const isLatestMode = process.argv.includes("--latest");
+console.debug(`isLatestMode=${isLatestMode}`);
+
 const isActionWorkflow = process.env.NODE_ENV === "gh-actions";
 console.debug(`isActionWorkflow=${isActionWorkflow}`);
 
 const SCRAPER_STATES_FILE = `html-scraper-states-${year}.json`;
 const MAX_PAGE_PER_RUN = 18;
+const MAX_LATEST_PAGES_PER_TYPE = 10;
 
 const htmlDirectory = "downloaded-html";
 
@@ -79,6 +84,118 @@ async function saveHTML(content: string, header?: string) {
   return { htmlFilename, htmlPath };
 }
 
+async function scrapeMeeting(
+  newPage: Page,
+  meetingUrl: string,
+  scraperState: ScraperState<MeetingHtml>
+) {
+  try {
+    console.debug("Visiting...", meetingUrl);
+
+    await newPage.goto(meetingUrl);
+
+    scraperState.pushVisitedUrl(meetingUrl);
+
+    await waitForPageContent(newPage);
+
+    const htmlContent = await meetingDetailHtml(newPage);
+    const header = `<!--
+  source: ${meetingUrl}
+  date: ${new Date().toISOString()}
+-->
+`;
+    const data = await saveHTML(htmlContent, header);
+
+    scraperState.pushMeetingReportUrl({
+      filePath: data.htmlPath,
+      sourceUrl: meetingUrl,
+    });
+    scraperState.removeErrorUrl(meetingUrl);
+  } catch (error) {
+    console.error(error.message);
+    scraperState.pushHasErrorUrl(meetingUrl);
+  } finally {
+    scraperState.saveFile();
+  }
+}
+
+function searchUrl(fileType: string) {
+  return (
+    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php" +
+    `?as_q=&as_epq=&as_oq=&as_eq=&ids=&yearno=${year === "all" ? "" : year}` +
+    "&year=&num=&session_id=&as_filetype=&" +
+    `as_type=${fileType}&Submit=%A4%E9%B9%CB%D2..` +
+    "&filename=index&type=6&formtype=advancedS"
+  );
+}
+
+async function goToNextListPage(page: Page) {
+  const firstLink = (await findLinksInPage(page))[0];
+  await page.$eval("a[href='##S']", (el: HTMLAnchorElement) => el.click());
+  // The list is replaced via AJAX, so wait until its first link changes
+  await page.waitForFunction(
+    (firstLink) =>
+      Array.from(document.querySelectorAll("a")).find(
+        (el) => el.textContent === "ดูเอกสารที่เกี่ยวข้องทั้งหมด"
+      )?.href !== firstLink,
+    {},
+    firstLink
+  );
+}
+
+const latestScraper = async () => {
+  const browser = await puppeteer.launch({
+    slowMo: 10,
+    args: ["--no-sandbox"],
+  });
+  const page = (await browser.pages()).at(0);
+  const newPage = await browser.newPage();
+
+  const scraperState = new ScraperState<MeetingHtml>(SCRAPER_STATES_FILE);
+  const knownUrls = new Set(
+    scraperState.allMeetingReportUrls.map((meeting) => meeting.sourceUrl)
+  );
+
+  for (const [typeIdx, fileType] of scraperState.fileTypes.entries()) {
+    // A slow list page must not stop the other file types or the regular crawl
+    try {
+      await page.bringToFront();
+      await page.goto(searchUrl(fileType));
+      await waitForPageContent(page);
+
+      for (let pageIdx = 0; pageIdx < MAX_LATEST_PAGES_PER_TYPE; pageIdx++) {
+        const newLinks = (await findLinksInPage(page)).filter(
+          (link) => !knownUrls.has(link)
+        );
+        console.debug(
+          `fileType=${typeIdx} page=${pageIdx}`,
+          `new links: ${newLinks.length}`
+        );
+
+        // Lists are sorted newest first, so a page with nothing new means we are caught up
+        if (newLinks.length === 0) break;
+
+        await newPage.bringToFront();
+        for (const meetingUrl of newLinks) {
+          await scrapeMeeting(newPage, meetingUrl, scraperState);
+          knownUrls.add(meetingUrl);
+        }
+        await page.bringToFront();
+
+        if (!(await page.$("a[href='##S']"))) break;
+        await goToNextListPage(page);
+      }
+    } catch (error) {
+      console.error(`fileType=${typeIdx} failed:`, error.message);
+    }
+  }
+
+  scraperState.saveFile();
+  await browser.close();
+
+  console.table({ total: scraperState.allMeetingReportUrls.length });
+};
+
 const scraper = async () => {
   const browser = await puppeteer.launch({
     slowMo: 10,
@@ -88,14 +205,7 @@ const scraper = async () => {
 
   const scraperState = new ScraperState<MeetingHtml>(SCRAPER_STATES_FILE);
 
-  const pageUrl =
-    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php" +
-    `?as_q=&as_epq=&as_oq=&as_eq=&ids=&yearno=${year === "all" ? "" : year}` +
-    "&year=&num=&session_id=&as_filetype=&" +
-    `as_type=${scraperState.fileType}&Submit=%A4%E9%B9%CB%D2..` +
-    "&filename=index&type=6&formtype=advancedS";
-
-  await page.goto(pageUrl);
+  await page.goto(searchUrl(scraperState.fileType));
 
   await waitForPageContent(page);
 
@@ -134,34 +244,7 @@ const scraper = async () => {
       await newPage.bringToFront();
 
       for (const meetingUrl of filteredLinks) {
-        try {
-          console.debug("Visiting...", meetingUrl);
-
-          await newPage.goto(meetingUrl);
-
-          scraperState.pushVisitedUrl(meetingUrl);
-
-          await waitForPageContent(newPage);
-
-          const htmlContent = await meetingDetailHtml(newPage);
-          const header = `<!--
-  source: ${meetingUrl}
-  date: ${new Date().toISOString()}
--->
-`;
-          const data = await saveHTML(htmlContent, header);
-
-          scraperState.pushMeetingReportUrl({
-            filePath: data.htmlPath,
-            sourceUrl: meetingUrl,
-          });
-          scraperState.removeErrorUrl(meetingUrl);
-        } catch (error) {
-          console.error(error.message);
-          scraperState.pushHasErrorUrl(meetingUrl);
-        } finally {
-          scraperState.saveFile();
-        }
+        await scrapeMeeting(newPage, meetingUrl, scraperState);
       }
 
       scraperState.saveFile();
@@ -209,4 +292,5 @@ const scraper = async () => {
   console.table(stats);
 };
 
-scraper();
+if (isLatestMode) latestScraper();
+else scraper();
