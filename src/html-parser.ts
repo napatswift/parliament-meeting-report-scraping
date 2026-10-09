@@ -141,7 +141,7 @@ function extractDates(text: string) {
     .replace("กรกฏาคม", "กรกฎาคม")
     .replace("กรกฎาค ม", "กรกฎาคม ")
     .matchAll(
-      /(\d+)\s+(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s+(พ\.ศ\.\s*)?(\d+)/g
+      /(\d+)\s+(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\.?\s+(พ\.ศ\.\s*)?(\d+)/g
     );
 
   const dates = new Array<string>();
@@ -243,7 +243,16 @@ function parse(meeting: MeetingHtml) {
 
   const documents = extractDataUrls(table, meeting);
 
-  const meetingDates = extractDates(convertThaiNumberToArabic(date));
+  let meetingDates = extractDates(convertThaiNumberToArabic(date));
+
+  // Some dates omit the year after the month, e.g. "ครั้งที่ 8/2475 วันศุกร์ที่ 15 กรกฎาคม";
+  // fall back to the year in the meeting number
+  const meetingYear = convertThaiNumberToArabic(date).match(/\/\s*(\d{4})/);
+  if (meetingDates.length === 0 && meetingYear) {
+    meetingDates = extractDates(
+      `${convertThaiNumberToArabic(date)} ${meetingYear[1]}`
+    );
+  }
 
   return {
     date: meetingDates[0],
@@ -303,6 +312,9 @@ function main() {
           existingReport.sourceUrl === report.sourceUrl &&
           existingReport.filePath === report.filePath
       );
+      // Re-parse only the date for cached sessions missing one
+      if (existingData && !existingData.date)
+        return { ...existingData, date: parse(report).date };
       if (existingData) return existingData;
       return {
         sessionId: "",
