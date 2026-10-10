@@ -106093,6 +106093,26 @@
     ]
   },
   {
+    "sessionId": "27.1.1.12",
+    "filePath": "downloaded-html/34/1012474334.html",
+    "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4763",
+    "date": "2026-09-24",
+    "essembleName": "สภาผู้แทนราษฎร",
+    "sessionInfo": [
+      "ข้อมูลการประชุมสภาผู้แทนราษฎร",
+      "ชุดที่ 27",
+      "ปีที่  1",
+      "สมัยสามัญประจำปีครั้งที่สอง",
+      "ครั้งที่ 12 วันพฤหัสบดีที่ 24 กันยายน 2569 เวลา 10.38 - 18.20 นาฬิกา"
+    ],
+    "documents": [
+      {
+        "text": "บันทึกการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12154&mid=4763"
+      }
+    ]
+  },
+  {
     "sessionId": "27.1.1.13",
     "filePath": "downloaded-html/17/33273117.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4765",
@@ -106161,6 +106181,26 @@
       {
         "text": "บันทึกการออกเสียงและลงคะแนน",
         "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12166&mid=4767"
+      }
+    ]
+  },
+  {
+    "sessionId": "27.1.1.16",
+    "filePath": "downloaded-html/54/1441904554.html",
+    "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4768",
+    "date": "2026-10-08",
+    "essembleName": "สภาผู้แทนราษฎร",
+    "sessionInfo": [
+      "ข้อมูลการประชุมสภาผู้แทนราษฎร",
+      "ชุดที่ 27",
+      "ปีที่  1",
+      "สมัยสามัญประจำปีครั้งที่สอง",
+      "ครั้งที่ 16 วันพฤหัสบดีที่ 8 ตุลาคม 2569 เวลา 10.39 - 17.28 นาฬิกา"
+    ],
+    "documents": [
+      {
+        "text": "บันทึกการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12171&mid=4768"
       }
     ]
   }

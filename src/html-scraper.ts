@@ -34,6 +34,22 @@ async function findLinksInPage(page: Page) {
   });
 }
 
+// The site sometimes refuses connections or stalls for a while; retry with backoff
+async function gotoWithRetry(page: Page, url: string, attempts = 4) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await page.goto(url);
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      const delay = attempt * 15000;
+      console.warn(
+        `goto failed (${error.message}), retry ${attempt} in ${delay / 1000}s`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
 async function waitForPageContent(page: Page) {
   await page.waitForSelector("#show_datawarehouse > table > tbody");
 }
@@ -92,7 +108,7 @@ async function scrapeMeeting(
   try {
     console.debug("Visiting...", meetingUrl);
 
-    await newPage.goto(meetingUrl);
+    await gotoWithRetry(newPage, meetingUrl);
 
     scraperState.pushVisitedUrl(meetingUrl);
 
@@ -160,7 +176,7 @@ const latestScraper = async () => {
     // A slow list page must not stop the other file types or the regular crawl
     try {
       await page.bringToFront();
-      await page.goto(searchUrl(fileType));
+      await gotoWithRetry(page, searchUrl(fileType));
       await waitForPageContent(page);
 
       for (let pageIdx = 0; pageIdx < MAX_LATEST_PAGES_PER_TYPE; pageIdx++) {
@@ -205,7 +221,7 @@ const scraper = async () => {
 
   const scraperState = new ScraperState<MeetingHtml>(SCRAPER_STATES_FILE);
 
-  await page.goto(searchUrl(scraperState.fileType));
+  await gotoWithRetry(page, searchUrl(scraperState.fileType));
 
   await waitForPageContent(page);
 

@@ -31,10 +31,13 @@ jobs:
       - name: install dependencies
         run: npm install
       - name: scrape latest html
+        # Keep whatever was scraped so it still gets parsed and committed
+        continue-on-error: true
         run: npm run scrape:latest
         env:
           NODE_ENV: gh-actions
       - name: scrape html
+        continue-on-error: true
         run: npm run scrape:html all
         env:
           NODE_ENV: gh-actions
