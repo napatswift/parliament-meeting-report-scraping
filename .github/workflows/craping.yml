@@ -6,6 +6,7 @@ on:
       main
   schedule:
     - cron: "0 0 */1 * *" # every day
+  workflow_dispatch:
 
 # Runs commit to main, so never let two of them overlap
 concurrency:
