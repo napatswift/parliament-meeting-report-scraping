@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "0 0 */1 * *" # every day
 
+# Runs commit to main, so never let two of them overlap
+concurrency:
+  group: html-scraper
+  cancel-in-progress: false
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -15,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # Re-runs would otherwise check out the stale triggering commit
+          ref: main
           lfs: true
       - uses: actions/setup-node@v3
         with:
@@ -43,5 +50,7 @@ jobs:
           git add ./meeting-sessions.json
           git add ./downloaded-html/**/*.html
           git add ./docs/index.html
+          git diff --cached --quiet && exit 0
           git commit -m "Update at $(date)"
+          git pull --rebase origin main
           git push
