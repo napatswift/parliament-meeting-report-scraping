@@ -102941,7 +102941,7 @@
   },
   {
     "sessionId": "26.2.1.9",
-    "filePath": "downloaded-html/67/1644948167.html",
+    "filePath": "downloaded-html/9/878915109.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4631",
     "date": "2025-01-16",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -102964,6 +102964,10 @@
       {
         "text": "รายงานการประชุม",
         "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=11833&mid=4631"
+      },
+      {
+        "text": "สรุปการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12111&mid=4631"
       }
     ]
   },
@@ -103283,7 +103287,7 @@
   },
   {
     "sessionId": "26.2.1.18",
-    "filePath": "downloaded-html/64/1360260664.html",
+    "filePath": "downloaded-html/97/984976797.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4643",
     "date": "2025-02-26",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -103313,7 +103317,7 @@
       },
       {
         "text": "สรุปการประชุม",
-        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12052&mid=4643"
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12112&mid=4643"
       }
     ]
   },
