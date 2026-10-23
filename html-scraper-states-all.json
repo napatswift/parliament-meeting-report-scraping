@@ -1,6 +1,6 @@
 {
   "fileType": 0,
-  "lastClickFunction": "show_datawarehouse_list('6','+doctype%3A%C3%D2%C2%A7%D2%B9%A1%D2%C3%BB%C3%D0%AA%D8%C1','2020');",
+  "lastClickFunction": "show_datawarehouse_list('6','+doctype%3A%C3%D2%C2%A7%D2%B9%A1%D2%C3%BB%C3%D0%AA%D8%C1','160');",
   "allMeetingReportUrls": [
     {
       "filePath": "downloaded-html/66/1257356566.html",
@@ -25861,6 +25861,10 @@
     {
       "filePath": "downloaded-html/68/2089837168.html",
       "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=363"
+    },
+    {
+      "filePath": "downloaded-html/79/1715009779.html",
+      "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4769"
     }
   ],
   "visitedUrls": [
@@ -27820,7 +27824,8 @@
     "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=2587",
     "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=2586",
     "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=2585",
-    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=2584"
+    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=2584",
+    "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4769"
   ],
   "hasErrorUrls": [
     "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4637",
