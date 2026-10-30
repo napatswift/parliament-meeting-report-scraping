@@ -106255,5 +106255,29 @@
         "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12177&mid=4770"
       }
     ]
+  },
+  {
+    "sessionId": "27.1.1.19",
+    "filePath": "downloaded-html/96/1203607696.html",
+    "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4771",
+    "date": "2026-10-28",
+    "essembleName": "สภาผู้แทนราษฎร",
+    "sessionInfo": [
+      "ข้อมูลการประชุมสภาผู้แทนราษฎร",
+      "ชุดที่ 27",
+      "ปีที่  1",
+      "สมัยสามัญประจำปีครั้งที่สอง",
+      "ครั้งที่ 19 วันพุธที่ 28 ตุลาคม 2569 เวลา 10.38 - 18.17 นาฬิกา"
+    ],
+    "documents": [
+      {
+        "text": "บันทึกการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12180&mid=4771"
+      },
+      {
+        "text": "บันทึกการออกเสียงและลงคะแนน",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12179&mid=4771"
+      }
+    ]
   }
 ]
