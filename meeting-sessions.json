@@ -23338,6 +23338,26 @@
     ]
   },
   {
+    "sessionId": "8.2.0.6",
+    "filePath": "downloaded-html/0/826979900.html",
+    "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=1977",
+    "date": "1957-08-01",
+    "essembleName": "สภาผู้แทนราษฎร",
+    "sessionInfo": [
+      "ข้อมูลการประชุมสภาผู้แทนราษฎร",
+      "ชุดที่ 8",
+      "ปีที่  2",
+      "สามัญ",
+      "ครั้งที่ 6 วันพฤหัสบดีที่ 1 สิงหาคม 2500"
+    ],
+    "documents": [
+      {
+        "text": "รายงานการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=4504&mid=1977"
+      }
+    ]
+  },
+  {
     "sessionId": "8.2.0.7",
     "filePath": "downloaded-html/25/1909362425.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=1978",
