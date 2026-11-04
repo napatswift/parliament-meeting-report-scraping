@@ -105328,7 +105328,7 @@
   },
   {
     "sessionId": "27.1.0.8",
-    "filePath": "downloaded-html/24/2127021924.html",
+    "filePath": "downloaded-html/13/2137329613.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4712",
     "date": "2026-04-23",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -105347,12 +105347,16 @@
       {
         "text": "บันทึกการออกเสียงและลงคะแนน",
         "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12013&mid=4712"
+      },
+      {
+        "text": "รายงานการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12187&mid=4712"
       }
     ]
   },
   {
     "sessionId": "27.1.0.9",
-    "filePath": "downloaded-html/84/1572404984.html",
+    "filePath": "downloaded-html/3/1833775503.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4713",
     "date": "2026-04-29",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -105371,6 +105375,10 @@
       {
         "text": "บันทึกการออกเสียงและลงคะแนน",
         "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12015&mid=4713"
+      },
+      {
+        "text": "รายงานการประชุม",
+        "href": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse_dll_x.php?aid=12186&mid=4713"
       }
     ]
   },
