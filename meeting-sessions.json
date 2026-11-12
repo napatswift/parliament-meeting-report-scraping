@@ -62201,8 +62201,8 @@
     ]
   },
   {
-    "sessionId": "21.1.1.7",
-    "filePath": "downloaded-html/39/966477939.html",
+    "sessionId": "21.1.0.7#1",
+    "filePath": "downloaded-html/56/1837383456.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=205",
     "date": "2001-03-21",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -62211,7 +62211,7 @@
       "ชุดที่ 21",
       "ปีที่  1",
       "สามัญทั่วไป",
-      "ครั้งที่ 7 วันพุธที่ 21 มีนาคม  2544 เวลา   13.35 น.- 18.05 น."
+      "ครั้งที่ 7 วันพุธที่ 21 มีนาคม 2544 เวลา 13.35 - 18.05 นาฬิกา"
     ],
     "documents": [
       {
@@ -62512,8 +62512,8 @@
     ]
   },
   {
-    "sessionId": "21.1.1.17#1",
-    "filePath": "downloaded-html/75/58905675.html",
+    "sessionId": "21.1.0.17",
+    "filePath": "downloaded-html/12/1315508312.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=222",
     "date": "2001-05-02",
     "essembleName": "สภาผู้แทนราษฎร",
@@ -62522,7 +62522,7 @@
       "ชุดที่ 21",
       "ปีที่  1",
       "สามัญทั่วไป",
-      "ครั้งที่ 17 วันพุธที่ 2 พฤษภาคม  2544 เวลา   13.40 น. 18.00 น."
+      "ครั้งที่ 17 วันพุธที่ 2 พฤษภาคม 2544 เวลา 13.40 - 18.00 นาฬิกา"
     ],
     "documents": [
       {
@@ -63026,7 +63026,7 @@
     ]
   },
   {
-    "sessionId": "21.1.0.7",
+    "sessionId": "21.1.0.7#2",
     "filePath": "downloaded-html/71/1459167471.html",
     "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=248",
     "date": "2001-08-22",
