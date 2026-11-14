@@ -13,6 +13,8 @@ interface AssemblySession {
   sessionInfo: string[];
   sourceUrl: string;
   documents: any[];
+  description?: string;
+  descriptionDocuments?: any[];
   filePath: string;
   sessionId: string;
 }
@@ -199,6 +201,135 @@ function extractDataUrls(table: HTMLTableElement, meeting: MeetingHtml) {
   return fileUrls;
 }
 
+const PUBLIC_REPORT_BASE =
+  "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/";
+const BLOCK_TAGS = new Set([
+  "DIV", "P", "LI", "UL", "OL", "TR", "TD", "TABLE",
+  "H1", "H2", "H3", "H4", "H5", "H6",
+]);
+const GENERIC_LABEL = /^[\s\-–]*\(?\s*(ดู)?(ผลการลงมติ|ตรวจสอบองค์ประชุม|การตรวจสอบองค์ประชุม)?\s*\)?[\s\-–]*$/;
+
+function cleanText(text: string) {
+  return text.replace(/[\u00a0\s]+/g, " ").trim();
+}
+
+// Some links point at internal hosts (e.g. http://10.156.7.199/vote/...) that
+// are unreachable from outside; the same file lives on the public host under
+// download/.
+function normalizeHref(url: URL) {
+  const internal =
+    /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(url.hostname) ||
+    url.hostname === "fimsbis.parliament.go.th";
+  if (!internal) return url.toString();
+  const path = url.pathname.replace(/^\/+/, "").replace(/^.*?(download\/)?(vote\/)/, "$1$2");
+  return new URL(
+    (path.startsWith("download/") ? "" : "download/") + path + url.search,
+    PUBLIC_REPORT_BASE
+  ).toString();
+}
+
+// The agenda item a link belongs to is the text just before it: the last
+// non-trivial block, starting from its last "- " line (items are often
+// wrapped across <br>-separated lines).
+function pickSubject(blocks: string[][]) {
+  const nonTrivial = blocks
+    .map((lines) =>
+      lines.filter((line) => {
+        const t = cleanText(line);
+        return !/^[-–—•.\s]*$/.test(t) && t !== "ใบประมวลผล";
+      })
+    )
+    .filter((lines) => lines.length > 0);
+  const last = nonTrivial[nonTrivial.length - 1];
+  if (!last) return "";
+  let start = 0;
+  last.forEach((line, i) => {
+    if (/^[-–]/.test(cleanText(line))) start = i;
+  });
+  // Join wrapped lines without adding spaces: <br> often splits Thai text
+  // mid-word, so only the whitespace already in the source is kept.
+  return cleanText(last.slice(start).join("").trim().replace(/^[-–]\s*/, ""));
+}
+
+// The hidden "เรื่องที่พิจารณา" row (tr#mydetail) holds a description of the
+// agenda, which may contain links to related documents (e.g. vote results).
+function extractDescription(doc: Document, meeting: MeetingHtml) {
+  const row = doc.getElementById("mydetail");
+  if (!row) return { description: "", descriptionDocuments: [] };
+
+  const sourceUrl = new URL(meeting.sourceUrl);
+  const links = new Array<{ label: string; href: string; subject: string }>();
+
+  let blocks: string[][] = [[""]];
+  let lastSubject = "";
+  const newBlock = () => blocks.push([""]);
+  const newLine = () => blocks[blocks.length - 1].push("");
+
+  const walk = (node: Node) => {
+    if (node.nodeType === 3) {
+      const lines = blocks[blocks.length - 1];
+      lines[lines.length - 1] += node.textContent;
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    const el = node as Element;
+    if (el.tagName === "BR") return newLine();
+    if (el.tagName === "A") {
+      const raw = el.getAttribute("href")?.trim();
+      if (!raw || raw.startsWith("#") || raw.startsWith("javascript:")) return;
+      const subject = pickSubject(blocks) || lastSubject;
+      lastSubject = subject;
+      blocks = [[""]];
+      links.push({
+        label: cleanText(el.textContent ?? "").replace(/^[-–]\s*/, ""),
+        href: normalizeHref(new URL(raw, sourceUrl)),
+        subject,
+      });
+      return;
+    }
+    const isBlock = BLOCK_TAGS.has(el.tagName);
+    if (isBlock) newBlock();
+    el.childNodes.forEach(walk);
+    if (isBlock) newBlock();
+  };
+  row.childNodes.forEach(walk);
+
+  // Same file linked twice (e.g. a "-" anchor and a labelled one): keep one,
+  // preferring the one with a label.
+  const byHref = new Map<string, (typeof links)[number]>();
+  for (const link of links) {
+    const prev = byHref.get(link.href);
+    if (!prev || (!prev.label && link.label)) byHref.set(link.href, link);
+  }
+
+  const named = Array.from(byHref.values()).map((link) => {
+    const fileId = new URL(link.href).pathname.split("/").pop()!.replace(/\.\w+$/, "");
+    const label = GENERIC_LABEL.test(link.label)
+      ? link.label.replace(/^[\s\-–(]+(ดู)?|[\s)]+$/g, "") ||
+        (/\/vote\//.test(link.href) ? "ผลการลงมติ" : fileId)
+      : link.label;
+    const subject =
+      link.subject.length > 300 ? `${link.subject.slice(0, 300)}…` : link.subject;
+    const text = subject && !subject.includes(label) ? `${subject} - ${label}` : subject || label;
+    return { text, label: link.label, href: link.href, fileId };
+  });
+
+  // Make names unique within a session
+  const seen = new Map<string, number>();
+  named.forEach((d) => seen.set(d.text, (seen.get(d.text) ?? 0) + 1));
+  const descriptionDocuments = named.map(({ fileId, ...d }) =>
+    seen.get(d.text)! > 1 ? { ...d, text: `${d.text} (${fileId})` } : d
+  );
+
+  const description = (row.textContent ?? "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\s*\n\s*/g, "\n")
+    .trim();
+
+  return { description, descriptionDocuments };
+}
+
 const ESSEMBLE_TYPES = {
   สภาร่างรัฐธรรมนูญ: "สภาร่างรัฐธรรมนูญ",
   สภาปฏิรูปแห่งชาติ: "สภาปฏิรูปแห่งชาติ",
@@ -260,6 +391,7 @@ function parse(meeting: MeetingHtml) {
     sessionInfo,
     sourceUrl: meeting.sourceUrl,
     documents,
+    ...extractDescription(doc, meeting),
   };
 }
 
@@ -315,6 +447,11 @@ function main() {
       // Re-parse only the date for cached sessions missing one
       if (existingData && !existingData.date)
         return { ...existingData, date: parse(report).date };
+      // Backfill the description for sessions cached before it was extracted
+      if (existingData && existingData.descriptionDocuments?.some((d: any) => d.label === undefined) !== false) {
+        const { description, descriptionDocuments } = parse(report);
+        return { ...existingData, description, descriptionDocuments };
+      }
       if (existingData) return existingData;
       return {
         sessionId: "",

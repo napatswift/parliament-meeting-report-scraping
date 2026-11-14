@@ -8,6 +8,7 @@ interface JSONMeetingSession {
   essembleName: string;
   sessionInfo: string[];
   documents: JSONMeetingDocument[];
+  descriptionDocuments?: JSONMeetingDocument[];
 }
 
 interface JSONMeetingDocument {
@@ -44,12 +45,33 @@ function generateDocumentLinks(documents: JSONMeetingDocument[] | undefined | nu
     .join(", ");
 }
 
+function generateDescriptionDocuments(
+  documents: JSONMeetingDocument[] | undefined | null
+): string {
+  if (!documents || documents.length === 0) {
+    return "-";
+  }
+  const items = documents
+    .map(
+      (doc) =>
+        `<li><a href="${escapeHtml(doc.href)}">${escapeHtml(doc.text)}</a></li>`
+    )
+    .join("\n");
+  return `<details>
+<summary>${documents.length} documents</summary>
+<ul>
+${items}
+</ul>
+</details>`;
+}
+
 function generateSessionRow(session: JSONMeetingSession): string {
   return `<tr>
 <td>${escapeHtml(session.date)}</td>
 <td>${escapeHtml(session.sessionId)}</td>
 <td>${(session.sessionInfo || []).map(escapeHtml).join(" &gt; ")}</td>
 <td>${generateDocumentLinks(session.documents)}</td>
+<td>${generateDescriptionDocuments(session.descriptionDocuments)}</td>
 <td><a href="${escapeHtml(session.sourceUrl)}">Source</a></td>
 </tr>`;
 }
@@ -73,6 +95,7 @@ function generateAssemblySection(
 <th>Session ID</th>
 <th>Session Info</th>
 <th>Documents</th>
+<th>Related Documents</th>
 <th>Source</th>
 </tr>
 </thead>
