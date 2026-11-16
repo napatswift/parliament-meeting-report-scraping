@@ -1,5 +1,5 @@
 {
-  "fileType": 2,
+  "fileType": 3,
   "lastClickFunction": "",
   "allMeetingReportUrls": [
     {
@@ -25957,6 +25957,10 @@
     {
       "filePath": "downloaded-html/19/168721319.html",
       "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4728"
+    },
+    {
+      "filePath": "downloaded-html/78/574745478.html",
+      "sourceUrl": "https://msbis.parliament.go.th/ewtadmin/ewt/parliament_report/main_warehouse.php?m_id=4776"
     }
   ],
   "visitedUrls": [],
